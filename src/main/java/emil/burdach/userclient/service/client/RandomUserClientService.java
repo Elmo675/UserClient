@@ -11,14 +11,14 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class RandomUserClient {
+public class RandomUserClientService {
 
     private final RestTemplate restTemplate;
 
-    private final Logger log = LoggerFactory.getLogger(RandomUserClient.class);
+    private final Logger log = LoggerFactory.getLogger(RandomUserClientService.class);
     private final static String URL = "https://randomuser.me/api/";
 
-    public RandomUserClient() {
+    public RandomUserClientService() {
         restTemplate = new RestTemplateBuilder().build();
     }
 

@@ -2,7 +2,7 @@ package emil.burdach.userclient.service;
 
 import emil.burdach.userclient.model.dto.UserDTO;
 import emil.burdach.userclient.model.response.RandomUserResponse;
-import emil.burdach.userclient.service.client.RandomUserClient;
+import emil.burdach.userclient.service.client.RandomUserClientService;
 import emil.burdach.userclient.service.mapper.RandomUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -16,11 +16,11 @@ import java.util.List;
 public class UserClient {
 
     private final Logger log = LoggerFactory.getLogger(UserClient.class);
-    private final RandomUserClient randomUserClient;
+    private final RandomUserClientService randomUserClientService;
 
     public List<UserDTO> users() {
         log.info("Request to get List of users DTO");
-        RandomUserResponse randomUserResponse = randomUserClient.getRandomUsersResponse();
+        RandomUserResponse randomUserResponse = randomUserClientService.getRandomUsersResponse();
         return RandomUserMapper.INSTANCE.mapToUserDTO(randomUserResponse.getResults());
     }
 }

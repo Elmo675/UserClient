@@ -1,7 +1,7 @@
 package emil.burdach.userclient.service;
 
 import emil.burdach.userclient.model.dto.UserDTO;
-import emil.burdach.userclient.service.client.RandomUserClient;
+import emil.burdach.userclient.service.client.RandomUserClientService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -17,7 +17,7 @@ class UserClientTest {
 
     @BeforeAll
     void setUp() {
-        userClient = new UserClient(new RandomUserClient());
+        userClient = new UserClient(new RandomUserClientService());
     }
 
     @Test
