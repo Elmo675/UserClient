@@ -14,10 +14,9 @@ import java.util.List;
 public class UserClient {
 
     private final RandomUserClient randomUserClient;
-    private final RandomUserMapper randomUserMapper;
 
     public List<UserDTO> users() {
         RandomUserResponse randomUserResponse = randomUserClient.getRandomUsersResponse();
-        return randomUserMapper.mapToUserDTO(randomUserResponse.getResults());
+        return RandomUserMapper.INSTANCE.mapToUserDTO(randomUserResponse.getResults());
     }
 }
