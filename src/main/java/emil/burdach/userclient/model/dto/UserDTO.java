@@ -14,7 +14,7 @@ public class UserDTO {
     String uuid;
     String firstName;
     String lastName;
-    String City;
+    String city;
     Gender gender;
     Instant registrationDate;
 }
