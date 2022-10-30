@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,5 +16,5 @@ public class UserDTO {
     String lastName;
     String city;
     Gender gender;
-    Instant registrationDate;
+    ZonedDateTime registrationDate;
 }
