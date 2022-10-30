@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,7 +21,12 @@ public class UserClient {
 
     public List<UserDTO> users() {
         log.info("Request to get List of users DTO");
-        RandomUserResponse randomUserResponse = randomUserClientService.getRandomUsersResponse();
-        return RandomUserMapper.INSTANCE.mapToUserDTO(randomUserResponse.getResults());
+        try {
+            RandomUserResponse randomUserResponse = randomUserClientService.getRandomUsersResponse();
+            return RandomUserMapper.INSTANCE.mapToUserDTO(randomUserResponse.getResults());
+        } catch (Exception e) {
+            log.error("There was a problem with communication with randomUserApi. Returning empty list");
+            return new ArrayList<>();
+        }
     }
 }
