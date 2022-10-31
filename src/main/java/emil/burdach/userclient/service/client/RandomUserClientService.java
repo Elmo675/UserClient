@@ -1,6 +1,7 @@
 package emil.burdach.userclient.service.client;
 
 import emil.burdach.userclient.model.response.RandomUserResponse;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -11,6 +12,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@AllArgsConstructor
 public class RandomUserClientService {
 
     private final RestTemplate restTemplate;
