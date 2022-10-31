@@ -7,6 +7,7 @@ import emil.burdach.userclient.model.Name;
 import emil.burdach.userclient.model.Registration;
 import emil.burdach.userclient.model.enums.Gender;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 public class RandomUserDTO {
     Gender gender;
     Name name;
