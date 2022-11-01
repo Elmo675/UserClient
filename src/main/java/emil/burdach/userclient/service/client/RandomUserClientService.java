@@ -19,16 +19,16 @@ public class RandomUserClientService {
     private final RestTemplate restTemplate;
 
     private final Logger log = LoggerFactory.getLogger(RandomUserClientService.class);
-    private final String URL;
+    private final String url;
 
     public RandomUserClientService() {
         restTemplate = new RestTemplateBuilder().build();
-        URL = "https://randomuser.me/api/";
+        url = "https://randomuser.me/api/";
     }
 
-    public RandomUserClientService(String URL) {
+    public RandomUserClientService(String url) {
         restTemplate = new RestTemplateBuilder().build();
-        this.URL = URL;
+        this.url = url;
     }
 
     public RandomUserResponse getRandomUsersResponse() {
@@ -36,7 +36,7 @@ public class RandomUserClientService {
         try {
             HttpHeaders headers = createHeaders();
             HttpEntity<String> request = new HttpEntity<>(headers);
-            ResponseEntity<RandomUserResponse> response = restTemplate.exchange(URL, HttpMethod.GET, request, RandomUserResponse.class);
+            ResponseEntity<RandomUserResponse> response = restTemplate.exchange(url, HttpMethod.GET, request, RandomUserResponse.class);
             return Optional.ofNullable(response.getBody())
                     .orElseThrow(() -> new RandomUserClientServiceException("RandomUsersApi response body is null"));
         } catch (HttpServerErrorException | HttpClientErrorException e) {
