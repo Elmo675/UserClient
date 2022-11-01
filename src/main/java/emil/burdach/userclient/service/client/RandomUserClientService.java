@@ -1,7 +1,7 @@
 package emil.burdach.userclient.service.client;
 
+import emil.burdach.userclient.exception.RandomUserClientServiceException;
 import emil.burdach.userclient.model.response.RandomUserResponse;
-import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -11,17 +11,24 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
+
 @Service
-@AllArgsConstructor
 public class RandomUserClientService {
 
     private final RestTemplate restTemplate;
 
     private final Logger log = LoggerFactory.getLogger(RandomUserClientService.class);
-    private final static String URL = "https://randomuser.me/api/";
+    private final String url;
 
     public RandomUserClientService() {
         restTemplate = new RestTemplateBuilder().build();
+        url = "https://randomuser.me/api/";
+    }
+
+    public RandomUserClientService(String url) {
+        restTemplate = new RestTemplateBuilder().build();
+        this.url = url;
     }
 
     public RandomUserResponse getRandomUsersResponse() {
@@ -29,14 +36,15 @@ public class RandomUserClientService {
         try {
             HttpHeaders headers = createHeaders();
             HttpEntity<String> request = new HttpEntity<>(headers);
-            ResponseEntity<RandomUserResponse> response = restTemplate.exchange(URL, HttpMethod.GET, request, RandomUserResponse.class);
-            return response.getBody();
+            ResponseEntity<RandomUserResponse> response = restTemplate.exchange(url, HttpMethod.GET, request, RandomUserResponse.class);
+            return Optional.ofNullable(response.getBody())
+                    .orElseThrow(() -> new RandomUserClientServiceException("RandomUsersApi response body is null"));
         } catch (HttpServerErrorException | HttpClientErrorException e) {
             log.error("Request failed. Exception status: {}, body: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw e;
+            throw new RandomUserClientServiceException(e.getStatusCode(), e.getResponseBodyAsString());
         } catch (Exception e) {
             log.error("Request failed. Exception Message: {}", e.getMessage());
-            throw e;
+            throw new RandomUserClientServiceException(e.getMessage());
         }
     }
 

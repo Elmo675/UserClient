@@ -1,71 +1,116 @@
 package emil.burdach.userclient.service.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import emil.burdach.userclient.exception.RandomUserClientServiceException;
 import emil.burdach.userclient.fixtures.RandomUserResponseFixtures;
 import emil.burdach.userclient.model.dto.RandomUserDTO;
 import emil.burdach.userclient.model.response.RandomUserResponse;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import emil.burdach.userclient.utils.ObjectMapperTestUtils;
+import org.junit.jupiter.api.*;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RandomUserClientServiceTest {
 
-    private final static String URL = "https://randomuser.me/api/";
+    private final static String URL = "http://localhost:8080/api";
 
     private RandomUserClientService randomUserClientService;
-    private RestTemplate restTemplate;
+    private WireMockServer wireMockServer;
 
     @BeforeAll
     void setUp() {
-        restTemplate = mock(RestTemplate.class);
-        randomUserClientService = new RandomUserClientService(restTemplate);
+        randomUserClientService = new RandomUserClientService(URL);
+        wireMockServer = new WireMockServer();
+        wireMockServer.start();
+        configureFor("localhost", 8080);
+    }
+
+    @BeforeEach
+    void prepareTest() {
+        wireMockServer.resetAll();
+    }
+
+    @AfterAll
+    void cleanUp() {
+        wireMockServer.stop();
     }
 
     @Test
-    void givenStatusOkAndReturnedBodyFemale_WhenGetRandomUsersResponse_ThenFirstNameEqualAndLoginUuidEqual() {
+    void givenStatusOkAndReturnedBodyFemale_WhenGetRandomUsersResponse_ThenFirstNameEqualAndLoginUuidEqual() throws JsonProcessingException {
         //given
-        when(restTemplate.exchange(eq(URL), eq(HttpMethod.GET), any(), eq(RandomUserResponse.class)))
-                .thenReturn(new ResponseEntity<>(RandomUserResponseFixtures.getFemaleRandomUserResponse(), HttpStatus.OK));
+        String responseAsString = ObjectMapperTestUtils
+                .getObjectMapper()
+                .writeValueAsString(RandomUserResponseFixtures.getFemaleRandomUserResponse());
+        stubFor(get(urlEqualTo("/api"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody(responseAsString)
+                        .withHeader("Content-Type", "application/json")));
         //when
         RandomUserResponse randomUsersResponse = randomUserClientService.getRandomUsersResponse();
         //then
-        RandomUserDTO responseUserDTO = randomUsersResponse.getResults().stream().findFirst().orElseThrow();
+        RandomUserDTO responseUserDTO = randomUsersResponse.getResults().stream().findFirst().orElseThrow(AssertionError::new);
         assertThat(responseUserDTO.getName().getFirst()).isEqualTo("FirstName");
         assertThat(responseUserDTO.getLogin().getUuid()).isEqualTo("UUID");
     }
 
     @Test
-    void givenStatusNotFound_WhenGetRandomUsersResponse_ThenHttpClientErrorExceptionThrown() {
+    void givenStatusOkAndReturnedBodyEmpty_WhenGetRandomUsersResponse_ThenRandomUserClientServiceExceptionIsThrownAndMessageEqual() {
         //given
-        when(restTemplate.exchange(eq(URL), eq(HttpMethod.GET), any(), eq(RandomUserResponse.class)))
-                .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+        stubFor(get(urlEqualTo("/api"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("")
+                        .withHeader("Content-Type", "application/json")));
         //when
         //then
         assertThatThrownBy(() -> randomUserClientService.getRandomUsersResponse())
-                .isExactlyInstanceOf(HttpClientErrorException.class);
+                .isExactlyInstanceOf(RandomUserClientServiceException.class)
+                .message().isEqualTo("RandomUsersApi response body is null");
     }
 
     @Test
-    void givenStatusInternalServerError_WhenGetRandomUsersResponse_ThenHttpServerErrorExceptionThrown() {
+    void givenStatusOkAndReturnedBodyBadJson_WhenGetRandomUsersResponse_ThenRandomUserClientServiceExceptionIsThrownAndMessageContains() {
         //given
-        when(restTemplate.exchange(eq(URL), eq(HttpMethod.GET), any(), eq(RandomUserResponse.class)))
-                .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+        stubFor(get(urlEqualTo("/api"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("BAD_JSON")
+                        .withHeader("Content-Type", "application/json")));
         //when
         //then
         assertThatThrownBy(() -> randomUserClientService.getRandomUsersResponse())
-                .isExactlyInstanceOf(HttpServerErrorException.class);
+                .isExactlyInstanceOf(RandomUserClientServiceException.class)
+                .message().contains("JSON parse error");
+    }
+
+    @Test
+    void givenStatusNotFound_WhenGetRandomUsersResponse_ThenRandomUserClientServiceExceptionThrownAndMessageEqual() {
+        //given
+        stubFor(get(urlEqualTo("/api"))
+                .willReturn(aResponse()
+                        .withStatus(404)));
+        //when
+        //then
+        assertThatThrownBy(() -> randomUserClientService.getRandomUsersResponse())
+                .isExactlyInstanceOf(RandomUserClientServiceException.class)
+                .message().isEqualTo("Exception status: 404, body: ");
+    }
+
+    @Test
+    void givenStatusInternalServerError_WhenGetRandomUsersResponse_ThenRandomUserClientServiceExceptionThrownAndMessageEqual() {
+        //given
+        stubFor(get(urlEqualTo("/api"))
+                .willReturn(aResponse()
+                        .withStatus(500)));
+        //when
+        //then
+        assertThatThrownBy(() -> randomUserClientService.getRandomUsersResponse())
+                .isExactlyInstanceOf(RandomUserClientServiceException.class)
+                .message().isEqualTo("Exception status: 500, body: ");
     }
 }
