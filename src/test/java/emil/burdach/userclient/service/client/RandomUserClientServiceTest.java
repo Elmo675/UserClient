@@ -10,23 +10,23 @@ import emil.burdach.userclient.utils.ObjectMapperTestUtils;
 import org.junit.jupiter.api.*;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RandomUserClientServiceTest {
 
-    private final static String URL = "http://localhost:8080/api";
-
     private RandomUserClientService randomUserClientService;
     private WireMockServer wireMockServer;
 
     @BeforeAll
     void setUp() {
-        randomUserClientService = new RandomUserClientService(URL);
-        wireMockServer = new WireMockServer();
+        wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
-        configureFor("localhost", 8080);
+        configureFor("localhost", wireMockServer.port());
+        String url = "http://localhost:" + wireMockServer.port() + "/api";
+        randomUserClientService = new RandomUserClientService(url);
     }
 
     @BeforeEach
